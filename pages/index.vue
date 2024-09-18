@@ -1,7 +1,7 @@
 <template>
 
     <div class="centrado">
-      <h2 >menu pdf</h2>
+      <h2 >menu pdf pendiente</h2>
     </div>
     <div class="centrado">
         <pdfviewer/>
