@@ -2,6 +2,7 @@
 
     <div class="centrado">
       <h2 >menu pdf pendiente</h2>
+      <h2 >Prueba2</h2>
     </div>
     <div class="centrado">
         <pdfviewer/>
