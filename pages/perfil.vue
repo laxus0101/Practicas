@@ -16,6 +16,7 @@
     </div>
     <div v-else class="max-w-sm mx-auto bg-white shadow-md rounded-lg overflow-hidden mt-14 ">
       <h3 class="text-center">no hay correo registrado</h3>
+      <h2 class="text-center">Favor de iniciar sesion</h2>
     </div>
   </div>
 

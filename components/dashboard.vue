@@ -3,7 +3,7 @@
     <div class="p-4 text-2xl font-bold">
       Dashboard
     </div>
-    <nav class="mt-10">
+    <nav class="mt-10  ml-3">
       <ul>
         <li>
           <NuxtLink to="#" class="block py-2.5 px-4 rounded hover:bg-gray-700">
@@ -21,7 +21,8 @@
           </NuxtLink>
         </li>
         <li>
-          <NuxtLink to="#" class="block py-2.5 px-4 rounded hover:bg-gray-700">
+          <NuxtLink to="#" class="inline-block text-white font-semibold py-2.5 px-4 rounded hover:bg-red-600 "
+          @click="logout">
             Logout
           </NuxtLink>
         </li>
@@ -35,6 +36,7 @@ import { useMyIniciosesionStore } from '~/stores/iniciosesion';
 
 const borrar = useMyIniciosesionStore()
 
-
-
+const logout = () => {
+  borrar.clearemail();
+}
 </script>
