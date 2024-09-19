@@ -6,8 +6,8 @@
     <nav class="mt-10  ml-3">
       <ul>
         <li>
-          <NuxtLink to="#" class="block py-2.5 px-4 rounded hover:bg-gray-700">
-            Productos en linea
+          <NuxtLink to="/data" class="block py-2.5 px-4 rounded hover:bg-gray-700">
+            Data
           </NuxtLink>
         </li>
         <li>

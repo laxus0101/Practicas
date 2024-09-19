@@ -39,6 +39,7 @@
     "pdfmake": "^0.2.12",
     "pinia": "^2.2.2",
     "vue": "latest",
+    "vue-apexcharts": "^1.6.2",
     "vue-router": "latest"
   },
   "devDependencies": {
