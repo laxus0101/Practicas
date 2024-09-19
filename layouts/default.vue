@@ -14,17 +14,16 @@
 </div>
 <div class="flex">
   <div class="w-2/12"></div>
-  <div id="footer" class="w-10/12 bg-slate-600 text-center ">
+  <div id="footer" class="w-10/12 text-center bg-slate-800">
     &copy; Emmanuel Gaona - {{ currentyear }}
   </div>
 </div>
 
 
-    
 
 
 </template>
-  
+
 <script setup>
 
   import { useDayjs } from '#imports';
@@ -42,4 +41,3 @@
   justify-content: center;
 }
 </style>
-  
