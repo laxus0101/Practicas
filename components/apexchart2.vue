@@ -1,4 +1,3 @@
-<!-- components/ChartComponent.vue -->
 <template>
   <div>
     <ApexChart
@@ -11,24 +10,53 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import ApexChart from 'vue3-apexcharts'
+import jsonData from './jsonpogen/junioAV.json'
 
-// Definimos las opciones y series del gráfico
+// Opciones del gráfico, por ahora vacías
 const chartOptions = ref({
   chart: {
-    id: 'basic-line'
+    id: 'entradas-line-chart'
   },
   xaxis: {
-    categories: [1991, 1992, 1993, 1994, 1995, 1996, 1997]
+    categories: [], // vacio para las fechas del json
+    labels: {
+      format: 'dd/MM/yyyy'
+    }
   }
 })
 
-const chartSeries = ref([
-  {
-    name: 'Ventas',
-    data: [30, 40, 35, 50, 49, 60, 70]
+// Series de datos para del json
+const chartSeries = ref([])
+
+// Función para cargar y procesar los datos JSON
+const fetchData = async () => {
+  try {
+
+    // Fetch del archivo JSON
+    const response = await fetch('jsonpogen/junioAV.json')
+    const jsonData = await response.json()
+
+    // Extraer fechas y entradas del campo `datos`
+    const fechas = jsonData.datos.map(item => item.fecha)
+    const entradas = jsonData.datos.map(item => parseInt(item.entradas))
+
+    // Actualizar las categorías del gráfico (fechas)
+    chartOptions.value.xaxis.categories = fechas
+
+    // Actualizar las series del gráfico (entradas)
+    chartSeries.value = [{
+      name: 'Entradas',
+      data: entradas
+    }]
+  } catch (error) {
+    console.error('Error cargando los datos del JSON:', error)
   }
-])
+}
+
+// Cargar los datos JSON al montar el componente
+onMounted(fetchData)
 </script>
+
 
