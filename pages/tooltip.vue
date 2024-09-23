@@ -8,5 +8,5 @@ import Popper1 from '~/components/popper1.vue';
   useHead({
     titleTemplate:'%s tooltip'
   })
-   
+
 </script>
