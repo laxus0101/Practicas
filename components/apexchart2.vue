@@ -1,14 +1,36 @@
 <template>
   <div>
-    <ClientOnly>
-      <ApexChart
-      width ="600"
-      type="line"
-      :options="chartOptions"
-      :series="chartSeries"
-    />
-    </ClientOnly>
+    <div class="flex justify-center mt-6" >
+      <ClientOnly>
+        <ApexChart
+          width ="600"
+          type="line"
+          :options="chartOptions"
+          :series="chartSeries"
+        />
+      </ClientOnly>
+    </div>
 
+    <div class="mt-5 flex justify-items-center justify-around">
+      <div>
+        <label for="year">Seleccionar Año:</label>
+        <select v-model="selectedYear" @change="applyFilters">
+          <option v-for="year in availableYears" :key="year" :value="year">{{ year }}</option>
+        </select>
+      </div>
+
+      <div>
+        <label for="months">Seleccionar Meses:</label>
+        <select v-model="selectedMonths" @change="applyFilters" multiple>
+          <option
+          v-for="(month, index) in availableMonths"
+          :key="month"
+          :value="index">
+          {{ month }}
+          </option>
+        </select>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -17,20 +39,16 @@ import { ref, onMounted } from 'vue'
 import ApexChart from 'vue3-apexcharts'
 import jsonData from './jsonpogen/junioAV.json'
 
-// Opciones del gráfico, por ahora vacías
+// Opciones del gráfico
 const chartOptions = ref({
   chart: {
     id: 'entradas por fecha'
   },
   xaxis: {
-    categories: [], // vacio para las fechas del json
+    categories: [],
     labels: {
-      datetimeFormatter: {
-        year: 'yyyy',
-        month: 'MMM \'yy',
-      }
-    },
-    range: 12
+      formatter: (val) => new Date(val).toLocaleDateString('es-ES', { year: 'numeric', month: 'short' })
+    }
   },
   stroke: {
     curve: 'smooth'
@@ -40,28 +58,68 @@ const chartOptions = ref({
   }
 })
 
-// Series de datos para del json
+// Series de datos
 const chartSeries = ref([{
   name: 'Entradas',
   data: []
-}]);
+}])
+
+// Filtros de año y mes
+const selectedYear = ref(new Date().getFullYear()) // Año seleccionado por defecto, el actual
+const selectedMonths = ref([]) // Meses seleccionados
+const availableYears = ref([]) // Años disponibles basados en los datos
+const availableMonths = ref(['default','Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'])
+
+// Datos agrupados y procesados
+const allData = ref([])
 
 // Función para cargar y procesar los datos JSON
 const processData = () => {
   const groupedData = jsonData.datos.reduce((acc, item) => {
-    //const date = item.fecha;
-    const date2 = new Date(item.fecha).toLocaleDateString('es-ES', { year: 'numeric', month: 'short' });
-    const entradas = parseInt(item.entradas, 10);
-    acc[date2] = (acc[date2] || 0) + entradas;
-    return acc;
-  }, {});
+    const date = new Date(item.fecha)
+    const year = date.getFullYear()
+    const month = date.getMonth() + 1 // Meses en JS son 0-11
 
-  chartOptions.value.xaxis.categories = Object.keys(groupedData);
-  chartSeries.value[0].data = Object.values(groupedData);
-};
+    const timestamp = date.getTime()
+    const entradas = parseInt(item.entradas, 10)
+
+    // Agrupamos las entradas por año, mes y fecha (timestamp)
+    if (!acc[year]) acc[year] = {}
+    if (!acc[year][month]) acc[year][month] = []
+    acc[year][month].push({ x: timestamp, y: entradas })
+
+    return acc
+  }, {})
+
+  // Actualizamos los años disponibles basados en los datos
+  availableYears.value = Object.keys(groupedData).map(year => parseInt(year, 10))
+
+  allData.value = groupedData
+
+  // Aplicamos los filtros por defecto
+  applyFilters()
+}
+
+// Función para aplicar los filtros y actualizar el gráfico
+const applyFilters = () => {
+  if (!allData.value[selectedYear.value]) return
+
+  const filteredData = []
+
+  selectedMonths.value.forEach(month => {
+    if (allData.value[selectedYear.value][month]) {
+      filteredData.push(...allData.value[selectedYear.value][month])
+    }
+  })
+
+  // Ordenar los datos filtrados por fecha
+  filteredData.sort((a, b) => a.x - b.x)
+
+  // Actualizar las categorías (fechas) y series (entradas) con los datos filtrados
+  chartOptions.value.xaxis.categories = filteredData.map(item => item.x)
+  chartSeries.value[0].data = filteredData
+}
 
 // Cargar los datos JSON al montar el componente
-processData();
+onMounted(processData)
 </script>
-
-
