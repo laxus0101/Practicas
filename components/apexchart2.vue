@@ -1,11 +1,14 @@
 <template>
   <div>
-    <ApexChart
+    <ClientOnly>
+      <ApexChart
       width ="600"
       type="line"
       :options="chartOptions"
       :series="chartSeries"
     />
+    </ClientOnly>
+
   </div>
 </template>
 
@@ -17,46 +20,48 @@ import jsonData from './jsonpogen/junioAV.json'
 // Opciones del gráfico, por ahora vacías
 const chartOptions = ref({
   chart: {
-    id: 'entradas-line-chart'
+    id: 'entradas por fecha'
   },
   xaxis: {
     categories: [], // vacio para las fechas del json
     labels: {
-      format: 'dd/MM/yyyy'
-    }
+      datetimeFormatter: {
+        year: 'yyyy',
+        month: 'MMM \'yy',
+      }
+    },
+    range: 12
+  },
+  stroke: {
+    curve: 'smooth'
+  },
+  dataLabels: {
+    enabled: false
   }
 })
 
 // Series de datos para del json
-const chartSeries = ref([])
+const chartSeries = ref([{
+  name: 'Entradas',
+  data: []
+}]);
 
 // Función para cargar y procesar los datos JSON
-const fetchData = async () => {
-  try {
+const processData = () => {
+  const groupedData = jsonData.datos.reduce((acc, item) => {
+    //const date = item.fecha;
+    const date2 = new Date(item.fecha).toLocaleDateString('es-ES', { year: 'numeric', month: 'short' });
+    const entradas = parseInt(item.entradas, 10);
+    acc[date2] = (acc[date2] || 0) + entradas;
+    return acc;
+  }, {});
 
-    // Fetch del archivo JSON
-    const response = await fetch('jsonpogen/junioAV.json')
-    const jsonData = await response.json()
-
-    // Extraer fechas y entradas del campo `datos`
-    const fechas = jsonData.datos.map(item => item.fecha)
-    const entradas = jsonData.datos.map(item => parseInt(item.entradas))
-
-    // Actualizar las categorías del gráfico (fechas)
-    chartOptions.value.xaxis.categories = fechas
-
-    // Actualizar las series del gráfico (entradas)
-    chartSeries.value = [{
-      name: 'Entradas',
-      data: entradas
-    }]
-  } catch (error) {
-    console.error('Error cargando los datos del JSON:', error)
-  }
-}
+  chartOptions.value.xaxis.categories = Object.keys(groupedData);
+  chartSeries.value[0].data = Object.values(groupedData);
+};
 
 // Cargar los datos JSON al montar el componente
-onMounted(fetchData)
+processData();
 </script>
 
 
