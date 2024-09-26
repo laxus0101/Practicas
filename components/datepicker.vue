@@ -10,7 +10,7 @@
       <p>Selected Date: {{ selectedDate }}</p>
     </div>
 </template> -->
-  
+
 <script setup>
 import { ref } from 'vue'
 import Datepicker from '@vuepic/vue-datepicker'
@@ -24,10 +24,9 @@ const selectedDate = ref(null)
 <template>
     <div>
         <label for="date">Select a date:</label>
-        <Datepicker 
+        <Datepickerss
         v-model="selectedDate"
         placeholder="select date"
-        
         />
         <p>Selected Date: {{ selectedDate }}</p>
     </div>
