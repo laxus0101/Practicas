@@ -1,95 +1,104 @@
 <template>
-  <div class="p-6">
-    <div v-if="isClient">
-      <div class="mb-6 flex flex-col items-center">
-        <label for="month" class="mb-2 text-lg font-semibold">Selecciona un mes:</label>
-        <input
-          type="month"
-          id="month"
-          v-model="selectedMonth"
-          @change="filterDataByMonth"
-          class="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-        />
-      </div>
-      <div class="w-full flex justify-center">
-        <VueApexCharts width="500" type="bar" :options="chartOptions" :series="series" />
-      </div>
-    </div>
-    <div v-else class="text-center">
-      <h1 class="text-xl font-bold">Cargando gráfico...</h1>
+  <div>
+    <ClientOnly>
+      <ApexChart
+        width="600"
+        type="line"
+        :options="chartOptions"
+        :series="chartSeries"
+      />
+    </ClientOnly>
+
+    <!-- Controles de paginación -->
+    <div class="mt-3 flex justify-between " >
+      <button @click="prevPage" :disabled="currentPage === 1">Anterior</button>
+      <span>Página {{ currentPage }} de {{ totalPages }}</span>
+      <button @click="nextPage" :disabled="currentPage === totalPages">Siguiente</button>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, defineAsyncComponent } from "vue";
-import dayjs from "dayjs"; // Para manejar las fechas
+import { ref } from 'vue'
+import ApexChart from 'vue3-apexcharts'
+import jsonData from './jsonpogen/junioAV.json'
 
-// Verificar si estamos en el cliente
-const isClient = process.client;
-
-// Cargar VueApexCharts solo en el cliente
-const VueApexCharts = isClient ? defineAsyncComponent(() => import("vue3-apexcharts")) : null;
-
-// Variables para el gráfico y los datos
+// Opciones del gráfico
 const chartOptions = ref({
   chart: {
-    id: "entradas-chart",
+    id: 'entradas-por-mes'
   },
   xaxis: {
-    categories: [], // Fechas
-  },
-  title: {
-    text: "Entradas por Fecha",
-    align: "center",
-  },
-});
-const series = ref([{ name: "Entradas", data: [] }]);
-
-// Variables para los datos crudos y mes seleccionado
-const rawData = ref([]); // Guardar los datos originales
-const selectedMonth = ref(""); // Mes seleccionado para el filtro
-
-// Cargar los datos al montar el componente
-onMounted(async () => {
-  try {
-    // Cargar el archivo JSON
-    const response = await fetch("/json-pogen/agosto AV.json");
-    const jsonData = await response.json();
-
-    // Guardar los datos originales
-    rawData.value = jsonData.datos.map(dato => ({
-      fecha: dato.fecha,
-      entradas: parseInt(dato.entradas),
-    }));
-
-    // Mostrar todos los datos al inicio
-    updateChart(rawData.value);
-  } catch (error) {
-    console.error("Error al cargar el JSON:", error);
+    type: 'datetime',
+    categories: [],
+    labels: {
+      formatter: function (val) {
+        return new Date(val).toLocaleDateString('es-ES', { year: 'numeric', month: 'short' });
+      }
+    }
   }
-});
+})
 
-// Función para actualizar el gráfico con los datos filtrados
-function updateChart(data) {
-  const fechas = data.map(dato => dato.fecha);
-  const entradas = data.map(dato => dato.entradas);
+// Series de datos
+const chartSeries = ref([{
+  name: 'Entradas',
+  data: []
+}]);
 
-  // Actualizar las categorías (fechas) y las series (entradas)
-  chartOptions.value.xaxis.categories = fechas;
-  series.value[0].data = entradas;
-}
+// Paginación
+const itemsPerPage = 50; // Número de datos a mostrar por página
+const currentPage = ref(1); // Página actual
+const totalPages = ref(0);  // Total de páginas
 
-// Función para filtrar los datos por mes
-function filterDataByMonth() {
-  if (selectedMonth.value) {
-    const filteredData = rawData.value.filter(dato => {
-      return dayjs(dato.fecha).format("YYYY-MM") === selectedMonth.value;
-    });
-    updateChart(filteredData);
-  } else {
-    // Si no hay un mes seleccionado, mostrar todos los datos
-    updateChart(rawData.value);
+// Datos agrupados y procesados
+const allData = ref([]); // Almacenará todos los datos procesados
+
+// Función para cargar y procesar los datos JSON
+const processData = () => {
+  const groupedData = jsonData.datos.reduce((acc, item) => {
+    const date = new Date(item.fecha).getTime(); // Convertimos la fecha a timestamp
+    const entradas = parseInt(item.entradas, 10);
+    acc[date] = (acc[date] || 0) + entradas;
+    return acc;
+  }, {});
+
+  allData.value = Object.keys(groupedData).map((date, index) => ({
+    x: Number(date),   // Usamos la fecha en formato numérico
+    y: Object.values(groupedData)[index] // El valor de las entradas
+  }));
+
+  // Calculamos el total de páginas
+  totalPages.value = Math.ceil(allData.value.length / itemsPerPage);
+
+  // Mostrar la primera página
+  updateChartSeries();
+};
+
+// Función para actualizar el gráfico en base a la página actual
+const updateChartSeries = () => {
+  const start = (currentPage.value - 1) * itemsPerPage;
+  const end = start + itemsPerPage;
+
+  // Actualizamos las categorías (fechas) y series (entradas) para la página actual
+  chartOptions.value.xaxis.categories = allData.value.slice(start, end).map(item => item.x);
+  chartSeries.value[0].data = allData.value.slice(start, end);
+};
+
+// Funciones de control de paginación
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    updateChartSeries();
   }
-}
+};
+
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    updateChartSeries();
+  }
+};
+
+// Cargar los datos JSON al montar el componente
+processData();
 </script>

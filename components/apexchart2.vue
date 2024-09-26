@@ -21,13 +21,8 @@
 
       <div>
         <label for="months">Seleccionar Meses:</label>
-        <select v-model="selectedMonths" @change="applyFilters" multiple>
-          <option
-          v-for="(month, index) in availableMonths"
-          :key="month"
-          :value="index">
-          {{ month }}
-          </option>
+        <select v-model="selectedMonths" @change="applyFilters">
+          <option v-for="month in availableMonths" :key="month" :value="month"> {{ month }}</option>
         </select>
       </div>
     </div>
@@ -68,7 +63,7 @@ const chartSeries = ref([{
 const selectedYear = ref(new Date().getFullYear()) // Año seleccionado por defecto, el actual
 const selectedMonths = ref([]) // Meses seleccionados
 const availableYears = ref([]) // Años disponibles basados en los datos
-const availableMonths = ref(['default','Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'])
+const availableMonths = ref(['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'])
 
 // Datos agrupados y procesados
 const allData = ref([])

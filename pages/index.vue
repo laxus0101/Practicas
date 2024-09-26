@@ -7,11 +7,15 @@
     </div>
     <div class="centrado">
         <pdfviewer/>
-      </div>
+    </div>
+
+    <div class="flex justify-center" ><datepicker1/></div>
+
 </template>
 
 <script setup>
 import pdfviewer from '~/components/pdfviewer.vue';
+import datepicker1 from '~/components/datepicker1.vue';
 
   useHead({
     titleTemplate:'%s pagina principal'
