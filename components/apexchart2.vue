@@ -40,7 +40,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue';
+import { ref, watch } from 'vue';
 import ApexChart from 'vue3-apexcharts';
 import dayjs from 'dayjs';
 import jsonData from './jsonpogen/junioAV.json';

@@ -14,3 +14,5 @@ export const usedatepciker = defineStore({
     storage: persistedState.localStorage,
     }
 })
+
+//buscar como usar pinia correctamente, agregar una grafica de pie y agregar opcion para filtrar por mes
