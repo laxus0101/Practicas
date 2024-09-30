@@ -1,19 +1,15 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import colors from 'tailwindcss/colors'
+
 export default defineNuxtConfig({
-  alias: {
-    '#tailwind-config': './tailwind.config.js',
-  },
   compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
-  colorMode:{
-    preference:'light'
-  },
   modules: [
     '@nuxtjs/tailwindcss',
     '@pinia/nuxt',
     '@pinia-plugin-persistedstate/nuxt',
     'dayjs-nuxt',
-    '@nuxt/ui',
+    //'@nuxt/ui',
   ],
-
 })
+
