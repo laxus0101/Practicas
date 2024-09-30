@@ -1,9 +1,9 @@
 <template>
   <div>
-    <div class="my-3">
-      <center>
-        <div>
-          <label for="plaza-select">Selecciona plaza:</label>
+    <div class="my-3 grid grid-cols-5 grid-rows-1 gap-4 ">
+
+        <div class="col-start-4 centers" >
+<!--           <label for="plaza-select">Selecciona plaza:</label> -->
           <select id="plaza-select" v-model="selectedPlazaId" @change="filterDataByDate">
             <option value="all">Todas las plazas</option>
             <option v-for="plaza in availablePlazas" :key="plaza" :value="plaza">
@@ -12,8 +12,9 @@
           </select>
         </div>
 
-        <div class="mt-4">
-          <label for="datepicker">Selecciona fecha o rango de fechas:</label>
+
+        <div class="col-start-5 ">
+<!--         <label for="datepicker">Selecciona fecha:</label>-->
           <VueDatePicker
             v-model="date"
             range multi-calendars
@@ -22,7 +23,7 @@
             @update:model-value="filterDataByDate"
           />
         </div>
-      </center>
+
     </div>
 
     <div class="flex justify-center mt-6">
