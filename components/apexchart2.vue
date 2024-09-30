@@ -5,15 +5,13 @@
         <div>
           <label for="plaza-select">Selecciona plaza:</label>
           <select id="plaza-select" v-model="selectedPlazaId" @change="filterDataByDate">
+            <option value="all">Todas las plazas</option>
             <option v-for="plaza in availablePlazas" :key="plaza" :value="plaza">
               Plaza {{ plaza }}
             </option>
           </select>
         </div>
 
-        <!-- Filtro para seleccionar fecha o rango de fechas
-        :range="{ partialRange: false }"
-        -->
         <div class="mt-4">
           <label for="datepicker">Selecciona fecha o rango de fechas:</label>
           <VueDatePicker
@@ -83,25 +81,72 @@ const chartSeries = ref([{
 }]);
 
 const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
-const selectedPlazaId = ref(availablePlazas[0]);
+const selectedPlazaId = ref('all');
 const date = ref(null);
 
-// Función para procesar los datos
+
 const processData = () => {
-  const groupedData = jsonData.datos.reduce((acc, item) => {
-    if (item.plaza_id == selectedPlazaId.value) {
-      const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes (YYYY-MM)
+  const allDates = new Set();
+
+  // Si se selecciona "todas las plazas"
+  if (selectedPlazaId.value === "all") {
+    // Paso 1: Recopilar todas las fechas en las que hay entradas para cualquier plaza
+    availablePlazas.forEach(plazaId => {
+      jsonData.datos
+        .filter(item => item.plaza_id == plazaId)
+        .forEach(item => {
+          const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
+          allDates.add(monthString); // Agregar todas las fechas de todas las plazas
+        });
+    });
+
+    const sortedDates = Array.from(allDates).sort(); // Ordenar las fechas
+
+    // Paso 2: Crear las series de datos para cada plaza
+    const seriesData = availablePlazas.map(plazaId => {
+      const groupedData = jsonData.datos.reduce((acc, item) => {
+        if (item.plaza_id == plazaId) {
+          const monthString = dayjs(item.fecha).format('YYYY-MM');
+          const entradas = parseInt(item.entradas, 10);
+          acc[monthString] = (acc[monthString] || 0) + entradas;
+        }
+        return acc;
+      }, {});
+
+      // Asegurarse de que todas las fechas tengan datos, y rellenar con 0 si faltan
+      const dataForSeries = sortedDates.map(date => groupedData[date] || 0);
+
+      return {
+        name: `Plaza ${plazaId}`,
+        data: dataForSeries
+      };
+    });
+
+    chartSeries.value = seriesData;
+    chartOptions.value.xaxis.categories = sortedDates; // Usar la lista ordenada de fechas
+  } else {
+    // Caso para una plaza específica
+    const filteredData = jsonData.datos.filter(item => item.plaza_id == selectedPlazaId.value);
+
+    const groupedData = filteredData.reduce((acc, item) => {
+      const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
       const entradas = parseInt(item.entradas, 10);
       acc[monthString] = (acc[monthString] || 0) + entradas;
-    }
-    return acc;
-  }, {});
+      return acc;
+    }, {});
 
-  // Actualizar las categorías (meses) y los datos (entradas)
-  chartOptions.value.xaxis.categories = Object.keys(groupedData);
-  chartSeries.value[0].data = Object.values(groupedData);
-  chartSeries.value[0].name = `Entradas Plaza ${selectedPlazaId.value}`;
+    // Asegurarse de que todas las fechas tengan datos, y rellenar con 0 si faltan
+    const allDates = Array.from(new Set(jsonData.datos.map(item => dayjs(item.fecha).format('YYYY-MM')))).sort();
+    const dataForSeries = allDates.map(date => groupedData[date] || 0);
+
+    chartSeries.value = [{
+      name: `Plaza ${selectedPlazaId.value}`,
+      data: dataForSeries
+    }];
+    chartOptions.value.xaxis.categories = allDates;
+  }
 };
+
 
 // Función para filtrar los datos por rango de fechas
 const filterDataByDate = () => {
@@ -111,20 +156,55 @@ const filterDataByDate = () => {
   }
 
   const [startDate, endDate] = date.value; // Obtener rango de fechas
-  const filteredData = jsonData.datos.filter(item => {
-    const itemDate = dayjs(item.fecha);
-    return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == selectedPlazaId.value;
-  });
 
-  const groupedData = filteredData.reduce((acc, item) => {
+
+  if (selectedPlazaId.value === "all") {
+    const seriesData = availablePlazas.map(plazaId => {
+      const filteredData = jsonData.datos.filter(item => {
+        const itemDate = dayjs(item.fecha);
+        return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == plazaId;
+      });
+
+      const groupedData = filteredData.reduce((acc, item) => {
+        const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
+        const entradas = parseInt(item.entradas, 10);
+        acc[monthString] = (acc[monthString] || 0) + entradas;
+        return acc;
+      }, {});
+
+      return {
+        name: `Plaza ${plazaId}`,
+        data: Object.values(groupedData)
+      };
+    });
+
+    chartSeries.value = seriesData;
+    chartOptions.value.xaxis.categories = Object.keys(seriesData[0]?.data || {}); // Usar las categorías de la primera plaza como referencia
+  }
+  else {
+
+    const filteredData = jsonData.datos.filter(item => {
+    const itemDate = dayjs(item.fecha);
+
+    return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == selectedPlazaId.value;
+    });
+
+    const groupedData = filteredData.reduce((acc, item) => {
     const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
     const entradas = parseInt(item.entradas, 10);
     acc[monthString] = (acc[monthString] || 0) + entradas;
     return acc;
-  }, {});
+    }, {});
 
-  chartOptions.value.xaxis.categories = Object.keys(groupedData);
-  chartSeries.value[0].data = Object.values(groupedData);
+    chartSeries.value = [{
+      name: `Plaza ${selectedPlazaId.value}`,
+      data: Object.values(groupedData)
+    }];
+    chartOptions.value.xaxis.categories = Object.keys(groupedData);
+
+  }
+
+
 };
 
 // Cargar los datos JSON al montar el componente
