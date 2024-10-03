@@ -3,7 +3,7 @@
     <div class="my-3 grid grid-cols-5 grid-rows-1 gap-4 ">
 
         <div class="col-start-4 centers" >
-<!--           <label for="plaza-select">Selecciona plaza:</label> -->
+
           <select id="plaza-select" v-model="selectedPlazaId" @change="filterDataByDate">
             <option value="all">Todas las plazas</option>
             <option v-for="plaza in availablePlazas" :key="plaza" :value="plaza">
@@ -14,7 +14,7 @@
 
 
         <div class="col-start-5 ">
-<!--         <label for="datepicker">Selecciona fecha:</label>-->
+
           <VueDatePicker
             v-model="date"
             range multi-calendars
@@ -36,6 +36,20 @@
         />
       </ClientOnly>
     </div>
+
+
+    <div class="flex justify-center mt-6">
+      <ClientOnly>
+        <ApexChart
+          width="600"
+          type="pie"
+          :options="pieChartOptions"
+          :series="pieChartSeries"
+        />
+      </ClientOnly>
+    </div>
+
+
   </div>
 </template>
 
@@ -51,7 +65,7 @@ import isBetween from 'dayjs/plugin/isBetween';
 // Activar el plugin isBetween
 dayjs.extend(isBetween);
 
-// Opciones del gráfico
+// Opciones del gráfico de linea
 const chartOptions = ref({
   chart: {
     id: 'entradas-por-fecha',
@@ -75,11 +89,36 @@ const chartOptions = ref({
   }
 });
 
-// Series de datos
+// Series de datos de grafico de linea
 const chartSeries = ref([{
   name: 'Entradas',
   data: []
 }]);
+
+
+// Opciones del gráfico de pie
+const pieChartOptions = ref({
+  chart: {
+    //width: 380,
+    type: 'pie'
+  },
+  labels: [],
+  responsive: [{
+    breakpoint: 480,
+    options: {
+      chart: {
+        width: 300
+      },
+      legend: {
+        position: 'bottom'
+      }
+    }
+  }]
+});
+
+// Series de datos del gráfico de pie
+const pieChartSeries = ref([]);
+
 
 const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
 const selectedPlazaId = ref('all');
@@ -125,6 +164,19 @@ const processData = () => {
 
     chartSeries.value = seriesData;
     chartOptions.value.xaxis.categories = sortedDates; // Usar la lista ordenada de fechas
+
+
+    // Para gráfico de pie (total de entradas por plaza)
+    const totalEntradasPorPlaza = availablePlazas.map(plazaId => {
+      return jsonData.datos
+        .filter(item => item.plaza_id == plazaId)
+        .reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
+    });
+
+    pieChartSeries.value = totalEntradasPorPlaza;
+    pieChartOptions.value.labels = availablePlazas.map(plazaId => `Plaza ${plazaId}`);
+
+
   } else {
     // Caso para una plaza específica
     const filteredData = jsonData.datos.filter(item => item.plaza_id == selectedPlazaId.value);
@@ -145,6 +197,14 @@ const processData = () => {
       data: dataForSeries
     }];
     chartOptions.value.xaxis.categories = allDates;
+
+
+    // Para gráfico de pie (solo para la plaza seleccionada)
+    const totalEntradas = filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
+    pieChartSeries.value = [totalEntradas];
+    pieChartOptions.value.labels = [`Plaza ${selectedPlazaId.value}`];
+
+
   }
 };
 
@@ -181,6 +241,23 @@ const filterDataByDate = () => {
 
     chartSeries.value = seriesData;
     chartOptions.value.xaxis.categories = Object.keys(seriesData[0]?.data || {}); // Usar las categorías de la primera plaza como referencia
+
+
+    // Actualizar gráfico de pie
+    const totalEntradasPorPlaza = availablePlazas.map(plazaId => {
+      const filteredData = jsonData.datos.filter(item => {
+        const itemDate = dayjs(item.fecha);
+        return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == plazaId;
+      });
+
+      return filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
+    });
+
+    pieChartSeries.value = totalEntradasPorPlaza;
+    pieChartOptions.value.labels = availablePlazas.map(plazaId => `Plaza ${plazaId}`);
+
+
+
   }
   else {
 
@@ -203,8 +280,12 @@ const filterDataByDate = () => {
     }];
     chartOptions.value.xaxis.categories = Object.keys(groupedData);
 
-  }
+     // Actualizar gráfico de pie
+    const totalEntradas = filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
+    pieChartSeries.value = [totalEntradas];
+    pieChartOptions.value.labels = [`Plaza ${selectedPlazaId.value}`];
 
+  }
 
 };
 
