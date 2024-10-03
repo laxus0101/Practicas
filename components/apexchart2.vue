@@ -37,7 +37,7 @@
       </ClientOnly>
     </div>
 
-
+    <!-- Piechart -->
     <div class="flex justify-center mt-6">
       <ClientOnly>
         <ApexChart
@@ -96,7 +96,7 @@ const chartSeries = ref([{
 }]);
 
 
-// Opciones del gráfico de pie
+// Opciones del gráfico de Piechart
 const pieChartOptions = ref({
   chart: {
     //width: 380,
@@ -116,7 +116,7 @@ const pieChartOptions = ref({
   }]
 });
 
-// Series de datos del gráfico de pie
+// Series de datos del gráfico de Piechart
 const pieChartSeries = ref([]);
 
 
@@ -166,7 +166,7 @@ const processData = () => {
     chartOptions.value.xaxis.categories = sortedDates; // Usar la lista ordenada de fechas
 
 
-    // Para gráfico de pie (total de entradas por plaza)
+    // Para gráfico de Piechart (total de entradas por plaza)
     const totalEntradasPorPlaza = availablePlazas.map(plazaId => {
       return jsonData.datos
         .filter(item => item.plaza_id == plazaId)
@@ -199,7 +199,7 @@ const processData = () => {
     chartOptions.value.xaxis.categories = allDates;
 
 
-    // Para gráfico de pie (solo para la plaza seleccionada)
+    // Para gráfico de Piechart (solo para la plaza seleccionada)
     const totalEntradas = filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
     pieChartSeries.value = [totalEntradas];
     pieChartOptions.value.labels = [`Plaza ${selectedPlazaId.value}`];
@@ -243,7 +243,7 @@ const filterDataByDate = () => {
     chartOptions.value.xaxis.categories = Object.keys(seriesData[0]?.data || {}); // Usar las categorías de la primera plaza como referencia
 
 
-    // Actualizar gráfico de pie
+    // Actualizar gráfico de Piechart
     const totalEntradasPorPlaza = availablePlazas.map(plazaId => {
       const filteredData = jsonData.datos.filter(item => {
         const itemDate = dayjs(item.fecha);
@@ -280,7 +280,7 @@ const filterDataByDate = () => {
     }];
     chartOptions.value.xaxis.categories = Object.keys(groupedData);
 
-     // Actualizar gráfico de pie
+     // Actualizar gráfico de Piechart
     const totalEntradas = filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
     pieChartSeries.value = [totalEntradas];
     pieChartOptions.value.labels = [`Plaza ${selectedPlazaId.value}`];
