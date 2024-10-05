@@ -37,19 +37,6 @@
       </ClientOnly>
     </div>
 
-    <!-- Piechart -->
-    <div class="flex justify-center mt-6">
-      <ClientOnly>
-        <ApexChart
-          width="600"
-          type="pie"
-          :options="pieChartOptions"
-          :series="pieChartSeries"
-        />
-      </ClientOnly>
-    </div>
-
-
   </div>
 </template>
 
@@ -95,29 +82,6 @@ const chartSeries = ref([{
   data: []
 }]);
 
-
-// Opciones del gráfico de Piechart
-const pieChartOptions = ref({
-  chart: {
-    //width: 380,
-    type: 'pie'
-  },
-  labels: [],
-  responsive: [{
-    breakpoint: 480,
-    options: {
-      chart: {
-        width: 300
-      },
-      legend: {
-        position: 'bottom'
-      }
-    }
-  }]
-});
-
-// Series de datos del gráfico de Piechart
-const pieChartSeries = ref([]);
 
 
 const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
@@ -165,18 +129,6 @@ const processData = () => {
     chartSeries.value = seriesData;
     chartOptions.value.xaxis.categories = sortedDates; // Usar la lista ordenada de fechas
 
-
-    // Para gráfico de Piechart (total de entradas por plaza)
-    const totalEntradasPorPlaza = availablePlazas.map(plazaId => {
-      return jsonData.datos
-        .filter(item => item.plaza_id == plazaId)
-        .reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
-    });
-
-    pieChartSeries.value = totalEntradasPorPlaza;
-    pieChartOptions.value.labels = availablePlazas.map(plazaId => `Plaza ${plazaId}`);
-
-
   } else {
     // Caso para una plaza específica
     const filteredData = jsonData.datos.filter(item => item.plaza_id == selectedPlazaId.value);
@@ -197,12 +149,6 @@ const processData = () => {
       data: dataForSeries
     }];
     chartOptions.value.xaxis.categories = allDates;
-
-
-    // Para gráfico de Piechart (solo para la plaza seleccionada)
-    const totalEntradas = filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
-    pieChartSeries.value = [totalEntradas];
-    pieChartOptions.value.labels = [`Plaza ${selectedPlazaId.value}`];
 
 
   }
@@ -242,22 +188,6 @@ const filterDataByDate = () => {
     chartSeries.value = seriesData;
     chartOptions.value.xaxis.categories = Object.keys(seriesData[0]?.data || {}); // Usar las categorías de la primera plaza como referencia
 
-
-    // Actualizar gráfico de Piechart
-    const totalEntradasPorPlaza = availablePlazas.map(plazaId => {
-      const filteredData = jsonData.datos.filter(item => {
-        const itemDate = dayjs(item.fecha);
-        return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == plazaId;
-      });
-
-      return filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
-    });
-
-    pieChartSeries.value = totalEntradasPorPlaza;
-    pieChartOptions.value.labels = availablePlazas.map(plazaId => `Plaza ${plazaId}`);
-
-
-
   }
   else {
 
@@ -279,11 +209,6 @@ const filterDataByDate = () => {
       data: Object.values(groupedData)
     }];
     chartOptions.value.xaxis.categories = Object.keys(groupedData);
-
-     // Actualizar gráfico de Piechart
-    const totalEntradas = filteredData.reduce((acc, item) => acc + parseInt(item.entradas, 10), 0);
-    pieChartSeries.value = [totalEntradas];
-    pieChartOptions.value.labels = [`Plaza ${selectedPlazaId.value}`];
 
   }
 

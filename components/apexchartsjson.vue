@@ -96,7 +96,3 @@ watch(filteredData, (newData) => {
   chartOptions.value.labels = plazaLabels; // Actualizar las etiquetas para las plazas
 });
 </script>
-
-<style scoped>
-/* Opcional, puedes agregar estilos aquí */
-</style>
