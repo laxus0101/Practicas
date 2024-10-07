@@ -4,7 +4,7 @@
 
         <div class="col-start-3 centers" >
 
-          <select id="plaza-select" v-model="selectedPlazaId" @change="filterDataByDate">
+          <select id="plaza-select" v-model="selectedPlazaIdId" @change="filterDataByDate">
             <option value="all">Todas las plazas</option>
             <option v-for="plaza in availablePlazas" :key="plaza" :value="plaza">
               Plaza {{ plaza }}
@@ -48,6 +48,16 @@
           type="line"
           :options="chartOptions"
           :series="chartSeries"
+        />
+      </ClientOnly>
+    </div>
+
+    <div class="flex justify-center mt-6">
+      <ClientOnly>
+        <ApexChart
+          type="pie"
+          :options="piechartOptions"
+          :series="piechartSeries"
         />
       </ClientOnly>
     </div>
@@ -100,7 +110,7 @@ const chartSeries = ref([{
 
 
 const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
-const selectedPlazaId = ref('all');
+const selectedPlazaIdId = ref('all');
 const date = ref(null);
 
 
@@ -108,7 +118,7 @@ const processData = () => {
   const allDates = new Set();
 
   // Si se selecciona "todas las plazas"
-  if (selectedPlazaId.value === "all") {
+  if (selectedPlazaIdId.value === "all") {
     // Paso 1: Recopilar todas las fechas en las que hay entradas para cualquier plaza
     availablePlazas.forEach(plazaId => {
       jsonData.datos
@@ -146,7 +156,7 @@ const processData = () => {
 
   } else {
     // Caso para una plaza específica
-    const filteredData = jsonData.datos.filter(item => item.plaza_id == selectedPlazaId.value);
+    const filteredData = jsonData.datos.filter(item => item.plaza_id == selectedPlazaIdId.value);
 
     const groupedData = filteredData.reduce((acc, item) => {
       const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
@@ -160,7 +170,7 @@ const processData = () => {
     const dataForSeries = allDates.map(date => groupedData[date] || 0);
 
     chartSeries.value = [{
-      name: `Plaza ${selectedPlazaId.value}`,
+      name: `Plaza ${selectedPlazaIdId.value}`,
       data: dataForSeries
     }];
     chartOptions.value.xaxis.categories = allDates;
@@ -168,6 +178,8 @@ const processData = () => {
 
   }
 };
+
+
 
 // Función para filtrar los datos por rango de fechas
 const filterDataByDate = () => {
@@ -179,7 +191,7 @@ const filterDataByDate = () => {
   const [startDate, endDate] = date.value; // Obtener rango de fechas
 
 
-  if (selectedPlazaId.value === "all") {
+  if (selectedPlazaIdId.value === "all") {
     const seriesData = availablePlazas.map(plazaId => {
       const filteredData = jsonData.datos.filter(item => {
         const itemDate = dayjs(item.fecha);
@@ -208,7 +220,7 @@ const filterDataByDate = () => {
     const filteredData = jsonData.datos.filter(item => {
     const itemDate = dayjs(item.fecha);
 
-    return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == selectedPlazaId.value;
+    return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == selectedPlazaIdId.value;
     });
 
     const groupedData = filteredData.reduce((acc, item) => {
@@ -219,7 +231,7 @@ const filterDataByDate = () => {
     }, {});
 
     chartSeries.value = [{
-      name: `Plaza ${selectedPlazaId.value}`,
+      name: `Plaza ${selectedPlazaIdId.value}`,
       data: Object.values(groupedData)
     }];
     chartOptions.value.xaxis.categories = Object.keys(groupedData);
@@ -228,11 +240,75 @@ const filterDataByDate = () => {
 
 };
 
+
 // Cargar los datos JSON al montar el componente
 processData();
 
-// Monitorea cambios en selectedPlazaId
-watch(selectedPlazaId, () => {
+// Monitorea cambios en selectedPlazaIdId
+watch(selectedPlazaIdId, () => {
   filterDataByDate(); // Llama a la función para filtrar según la plaza seleccionada
 });
+
+
+
+//GRAFICA DE PIE
+
+
+const piefilteredData = computed(() => {
+  let data = jsonData.datos;
+
+  // Filtrar por rango de fechas
+  if (date.value && date.value.length === 2) {
+    const [startDate, endDate] = date.value;
+    data = data.filter(d => dayjs(d.fecha).isBetween(startDate, endDate, null, '[]'));
+  }
+
+  // Filtrar por plaza (si se selecciona una específica)
+  if (selectedPlazaIdId.value !== 'all') {
+    data = data.filter(d => d.plaza_id === parseInt(selectedPlazaIdId.value));
+  }
+
+  return data;
+});
+
+// Generar los datos para la gráfica de pie
+const piechartSeries = computed(() => {
+  const plazaData = {};
+
+  // Agrupar entradas por plaza
+  piefilteredData.value.forEach((cur) => {
+    if (plazaData[cur.plaza_id]) {
+      plazaData[cur.plaza_id] += parseInt(cur.entradas);
+    } else {
+      plazaData[cur.plaza_id] =parseInt(cur.entradas);
+
+      /*
+      {
+        entradas:parseInt(cur.entradas),
+        nombrePlaza: cur.plaza_id
+      };
+      */
+
+    }
+  });
+
+  // Devolver las entradas como serie
+  return Object.values(plazaData)//.map(plaza => plaza.entradas);
+});
+
+/*
+const piechartLabels = computed(() => {
+  return Object.values(plazaData).map(plaza => plaza.nombrePlaza);
+});
+*/
+
+// Configuración de opciones para la gráfica
+const piechartOptions = ref({
+  chart: {
+    type: 'pie',
+  },
+  labels:[] //piechartLabels.value //
+});
+
+
 </script>
