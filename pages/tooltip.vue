@@ -1,8 +1,6 @@
 <template>
     <Popper1/>
 
-    <apexchartsjson/>
-
 </template>
 
 <script setup>

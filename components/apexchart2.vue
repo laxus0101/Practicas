@@ -2,7 +2,7 @@
   <div>
     <div class="my-3 grid grid-cols-5 grid-rows-1 gap-4 ">
 
-        <div class="col-start-4 centers" >
+        <div class="col-start-3 centers" >
 
           <select id="plaza-select" v-model="selectedPlazaId" @change="filterDataByDate">
             <option value="all">Todas las plazas</option>
@@ -13,17 +13,31 @@
         </div>
 
 
-        <div class="col-start-5 ">
+        <div class="col-start-4 ">
 
           <VueDatePicker
             v-model="date"
             range multi-calendars
+            placeholder="Select Range"
             :month-change-on-scroll="false"
             :week-numbers="{ type: 'iso' }"
             class="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             @update:model-value="filterDataByDate"
           />
         </div>
+
+        <div class="col-start-5 ">
+          <VueDatePicker
+            v-model="date"
+            placeholder="Select Week"
+            week-picker
+            :month-change-on-scroll="false"
+            :week-numbers="{ type: 'iso' }"
+            class="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            @update:model-value="filterDataByDate"
+          />
+        </div>
+
 
     </div>
 
