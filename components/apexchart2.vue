@@ -19,6 +19,7 @@
             v-model="date"
             range multi-calendars
             :month-change-on-scroll="false"
+            :week-numbers="{ type: 'iso' }"
             class="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             @update:model-value="filterDataByDate"
           />
@@ -153,7 +154,6 @@ const processData = () => {
 
   }
 };
-
 
 // Función para filtrar los datos por rango de fechas
 const filterDataByDate = () => {
