@@ -96,7 +96,7 @@ const chartOptions = ref({
   xaxis: {
     categories: [], // Se llenarán con los meses
     labels: {
-      formatter: (val) => dayjs(val).format('DD MMM YYYY') // Mostrar meses en el eje X
+      formatter: (val) => dayjs(val).format('MMM YYYY') // Mostrar meses en el eje X
     }
   },
   stroke: {
@@ -306,17 +306,13 @@ const piechartSeries = computed(() => {
 
   // Agrupar entradas por plaza
   piefilteredData.value.forEach((cur) => {
+
+
+
     if (plazaData[cur.plaza_id]) {
       plazaData[cur.plaza_id] += parseInt(cur.entradas);
     } else {
       plazaData[cur.plaza_id] =parseInt(cur.entradas);
-
-      /*
-      {
-        entradas:parseInt(cur.entradas),
-        nombrePlaza: cur.plaza_id
-      };
-      */
 
     }
   });

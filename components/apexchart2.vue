@@ -83,6 +83,20 @@ import isBetween from 'dayjs/plugin/isBetween';
 // Activar el plugin isBetween
 dayjs.extend(isBetween);
 
+const selectedView = ref('months');
+
+//para seleccionar el formato seun se pida
+const formatDate = (date) => {
+    if (selectedView.value === 'days') {
+      Console.console.log('prueba 1');
+      return dayjs(date).format('YYYY-MM-DD');
+    } else if (selectedView.value === 'weeks') {
+      return dayjs(date).format('YYYY-WW'); // Agrupar por semana
+    } else if (selectedView.value === 'months') {
+    return dayjs(date).format('YYYY-MM'); // Formato para meses
+    }
+};
+
 // Opciones del gráfico de linea
 const chartOptions = ref({
   chart: {
@@ -96,7 +110,6 @@ const chartOptions = ref({
   xaxis: {
     categories: [], // Se llenarán con los meses
     labels: {
-      //formatter: (val) => dayjs(val).format('DD MMM YYYY') // Mostrar meses en el eje X
       formatter: (val) => formatDate(val)
     }
   },
@@ -114,36 +127,21 @@ const chartSeries = ref([{
   data: []
 }]);
 
-
-
 const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
 const selectedPlazaIdId = ref('all');
 const date = ref(null);
-
-const selectedView = ref('months');
-  //para seleccionar el formato seun se pida
-const formatDate = (date) => {
-    if (selectedView.value === 'days') {
-      return dayjs(date).format('YYYY-MM-DD');
-    } else if (selectedView.value === 'weeks') {
-      return dayjs(date).format('YYYY-WW'); // Agrupar por semana
-    } else if (selectedView.value === 'months') {
-    return dayjs(date).format('YYYY-MM'); // Formato para meses
-    }
-};
 
 const processData = () => {
   const allDates = new Set();
 
   // Si se selecciona "todas las plazas"
   if (selectedPlazaIdId.value === "all") {
-    // Paso 1: Recopilar todas las fechas en las que hay entradas para cualquier plaza
+    //Recopilar todas las fechas en las que hay entradas para cualquier plaza
     availablePlazas.forEach(plazaId => {
       jsonData.datos
         .filter(item => item.plaza_id == plazaId)
         .forEach(item => {
 
-          //const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
           const monthString = formatDate(item.fecha);
           allDates.add(monthString); // Agregar todas las fechas de todas las plazas
         });
@@ -151,15 +149,12 @@ const processData = () => {
 
     const sortedDates = Array.from(allDates).sort(); // Ordenar las fechas
 
-    // Paso 2: Crear las series de datos para cada plaza
+    //Crear las series de datos para cada plaza
     const seriesData = availablePlazas.map(plazaId => {
       const groupedData = jsonData.datos.reduce((acc, item) => {
         if (item.plaza_id == plazaId) {
 
-          //const monthString = dayjs(item.fecha).format('YYYY-MM');
           const monthString = formatDate(item.fecha);
-
-
 
           const entradas = parseInt(item.entradas, 10);
           acc[monthString] = (acc[monthString] || 0) + entradas;
@@ -184,7 +179,6 @@ const processData = () => {
     const filteredData = jsonData.datos.filter(item => item.plaza_id == selectedPlazaIdId.value);
 
     const groupedData = filteredData.reduce((acc, item) => {
-      //const monthString = dayjs(item.fecha).format('YYYY-MM');
       const monthString = formatDate(item.fecha);
       const entradas = parseInt(item.entradas, 10);
       acc[monthString] = (acc[monthString] || 0) + entradas;
@@ -192,7 +186,6 @@ const processData = () => {
     }, {});
 
     // Asegurarse de que todas las fechas tengan datos, y rellenar con 0 si faltan
-    //const allDates = Array.from(new Set(jsonData.datos.map(item => dayjs(item.fecha).format('YYYY-MM')))).sort();
     const allDates = Array.from(new Set(jsonData.datos.map(item => formatDate(item.fecha)))).sort();
 
     const dataForSeries = allDates.map(date => groupedData[date] || 0);
@@ -202,10 +195,8 @@ const processData = () => {
     }];
     chartOptions.value.xaxis.categories = allDates;
 
-
   }
 };
-
 
 // Función para filtrar los datos por rango de fechas
 const filterDataByDate = () => {
@@ -215,90 +206,96 @@ const filterDataByDate = () => {
     return;
   }
 
-  const [startDate, endDate] = date.value; // Obtener rango de fechas
-
-
-  // Crear un conjunto de todas las fechas posibles dentro del rango
-  let allDates = [];
-  let currentDate = startDate;
-
-  // Añadir las fechas dentro del rango, dependiendo de la vista seleccionada (días, semanas, meses)
-  while (currentDate.isBefore(endDate) || currentDate.isSame(endDate)) {
-    allDates.push(formatDate(currentDate));
-    currentDate = currentDate.add(1, selectedView.value); // Añadir días, semanas o meses según la vista seleccionada
-  }
-
+  const [startDate, endDate] = date.value;
+  let allDates = new Set();
 
   if (selectedPlazaIdId.value === "all") {
+
     const seriesData = availablePlazas.map(plazaId => {
       const filteredData = jsonData.datos.filter(item => {
         const itemDate = dayjs(item.fecha);
-        return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == plazaId;
+        return itemDate.isBetween(startDate,endDate, null, '[]') && item.plaza_id == plazaId;
+        });
+
+      console.log(filteredData);
+
+      filteredData.forEach(item => {
+      const monthString = formatDate(item.fecha);
+        allDates.add(monthString);
       });
 
+      console.log("dates 1",allDates);
+
+      const sortedDates = Array.from(allDates).sort();
+      console.log("Fechas ordenadas:", sortedDates);
+
       const groupedData = filteredData.reduce((acc, item) => {
-        //const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
-        const monthString = formatDate(item.fecha);
-        const entradas = parseInt(item.entradas, 10);
-        acc[monthString] = (acc[monthString] || 0) + entradas;
-        return acc;
+          const monthString = formatDate(item.fecha); // Agrupar por mes
+          const entradas = parseInt(item.entradas, 10);
+          acc[monthString] = (acc[monthString] || 0) + entradas;
+          return acc;
       }, {});
 
-      const dataForSeries = allDates.map(date => groupedData[date] || 0);
+        // Asegurarse de que todas las fechas tengan datos, y rellenar con 0 si faltan
+      const dataForSeries = sortedDates.map(date => groupedData[date] || 0);
+
+      console.log(dataForSeries);
 
       return {
         name: `Plaza ${plazaId}`,
         data: dataForSeries
       };
-    });
+    }
+    );
+
+    console.log("dates 2",allDates);
 
     chartSeries.value = seriesData;
-    //chartOptions.value.xaxis.categories = Object.keys(seriesData[0]?.data || {}); // Usar las categorías de la primera plaza como referencia
-    chartOptions.value.xaxis.categories = allDates;
+    //chartOptions.value.xaxis.categories = allDates;
+    chartOptions.value.xaxis.categories = Array.from(allDates).sort();
 
   }
   else {
 
     const filteredData = jsonData.datos.filter(item => {
       const itemDate = dayjs(item.fecha);
-
       return itemDate.isBetween(startDate, endDate, null, '[]') && item.plaza_id == selectedPlazaIdId.value;
     });
 
+    filteredData.forEach(item => {
+      const monthString = formatDate(item.fecha);
+      allDates.add(monthString);
+    });
+
+    const sortedDates = Array.from(allDates).sort();
+
     const groupedData = filteredData.reduce((acc, item) => {
-    //const monthString = dayjs(item.fecha).format('YYYY-MM'); // Agrupar por mes
-    const monthString = formatDate(item.fecha);
-    const entradas = parseInt(item.entradas, 10);
-    acc[monthString] = (acc[monthString] || 0) + entradas;
-    return acc;
+      const monthString = formatDate(item.fecha); // Agrupar por mes
+      const entradas = parseInt(item.entradas, 10);
+      acc[monthString] = (acc[monthString] || 0) + entradas;
+      return acc;
     }, {});
 
-    const dataForSeries = allDates.map(date => groupedData[date] || 0);
+    const dataForSeries = sortedDates.map(date => groupedData[date] || 0);
 
+    // Asignar los datos de la serie al gráfico
     chartSeries.value = [{
       name: `Plaza ${selectedPlazaIdId.value}`,
-      //data: Object.values(groupedData)
-      data:dataForSeries
+      data: dataForSeries
     }];
-    //chartOptions.value.xaxis.categories = Object.keys(groupedData);
-    chartOptions.value.xaxis.categories = allDates;
 
+    chartOptions.value.xaxis.categories = sortedDates;
   }
-
 };
-
 // Cargar los datos JSON al montar el componente
 processData();
 
 // Monitorea cambios en selectedPlazaIdId
-watch([selectedPlazaIdId.selectedView], () => {
+watch([selectedPlazaIdId,selectedView], () => {
   filterDataByDate(); // Llama a la función para filtrar según la plaza seleccionada
 });
 
-
-
 //GRAFICA DE PIE
-
 
 const piefilteredData = computed(() => {
   let data = jsonData.datos;
@@ -326,35 +323,34 @@ const piechartSeries = computed(() => {
     if (plazaData[cur.plaza_id]) {
       plazaData[cur.plaza_id] += parseInt(cur.entradas);
     } else {
-      plazaData[cur.plaza_id] =parseInt(cur.entradas);
-
-      /*
-      {
-        entradas:parseInt(cur.entradas),
-        nombrePlaza: cur.plaza_id
-      };
-      */
-
+      plazaData[cur.plaza_id] = parseInt(cur.entradas);
     }
   });
 
+
   // Devolver las entradas como serie
-  return Object.values(plazaData)//.map(plaza => plaza.entradas);
+  return Object.values(plazaData);
 });
 
-/*
+// Generar los labels para la gráfica de pie
 const piechartLabels = computed(() => {
-  return Object.values(plazaData).map(plaza => plaza.nombrePlaza);
+  const plazaLabels = {};
+
+  // Agrupar los nombres de las plazas
+  piefilteredData.value.forEach((cur) => {
+    plazaLabels[cur.plaza_id] = `Plaza ${cur.plaza_id}`; // Crea una etiqueta para cada plaza
+  });
+
+  return Object.values(plazaLabels); // Retorna los labels como array
 });
-*/
+
 
 // Configuración de opciones para la gráfica
 const piechartOptions = ref({
   chart: {
     type: 'pie',
   },
-  labels:[] //piechartLabels.value //
+  labels: piechartLabels.value
 });
-
 
 </script>
