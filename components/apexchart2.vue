@@ -110,7 +110,7 @@ const chartOptions = ref({
   xaxis: {
     categories: [], // Se llenarán con los meses
     labels: {
-      formatter: (val) => formatDate(val)
+      formatter: (value) => formatDate(value)
     }
   },
   stroke: {
@@ -174,6 +174,7 @@ const processData = () => {
     chartSeries.value = seriesData;
     chartOptions.value.xaxis.categories = sortedDates; // Usar la lista ordenada de fechas
 
+
   } else {
     // Caso para una plaza específica
     const filteredData = jsonData.datos.filter(item => item.plaza_id == selectedPlazaIdId.value);
@@ -194,6 +195,7 @@ const processData = () => {
       data: dataForSeries
     }];
     chartOptions.value.xaxis.categories = allDates;
+
 
   }
 };
@@ -217,20 +219,15 @@ const filterDataByDate = () => {
         return itemDate.isBetween(startDate,endDate, null, '[]') && item.plaza_id == plazaId;
         });
 
-      console.log(filteredData);
-
       filteredData.forEach(item => {
       const monthString = formatDate(item.fecha);
         allDates.add(monthString);
       });
 
-      console.log("dates 1",allDates);
-
       const sortedDates = Array.from(allDates).sort();
-      console.log("Fechas ordenadas:", sortedDates);
 
       const groupedData = filteredData.reduce((acc, item) => {
-          const monthString = formatDate(item.fecha); // Agrupar por mes
+          const monthString = formatDate(item.fecha);
           const entradas = parseInt(item.entradas, 10);
           acc[monthString] = (acc[monthString] || 0) + entradas;
           return acc;
@@ -248,11 +245,22 @@ const filterDataByDate = () => {
     }
     );
 
-    console.log("dates 2",allDates);
+    chartSeries.value = [];
+    chartOptions.value.xaxis.categories = [];
 
     chartSeries.value = seriesData;
     //chartOptions.value.xaxis.categories = allDates;
     chartOptions.value.xaxis.categories = Array.from(allDates).sort();
+    try {
+      console.log("Categories en xaxis:", chartOptions.value.xaxis.categories);
+    } catch (error) {
+      console.log("algo salio mal o:")
+    }
+
+    console.log("Series data length:", seriesData[0]?.data.length);
+    console.log("Categories length:", chartOptions.value.xaxis.categories.length);
+
+
 
   }
   else {
@@ -285,6 +293,7 @@ const filterDataByDate = () => {
     }];
 
     chartOptions.value.xaxis.categories = sortedDates;
+
   }
 };
 // Cargar los datos JSON al montar el componente
@@ -293,6 +302,7 @@ processData();
 // Monitorea cambios en selectedPlazaIdId
 watch([selectedPlazaIdId,selectedView], () => {
   filterDataByDate(); // Llama a la función para filtrar según la plaza seleccionada
+  chartOptions.value.xaxis.categories
 });
 
 //GRAFICA DE PIE
