@@ -25,6 +25,7 @@
             v-model="date"
             range multi-calendars
             placeholder="Select Range"
+            :enable-time-picker="false"
             :month-change-on-scroll="false"
             :week-numbers="{ type: 'iso' }"
             class="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -37,6 +38,7 @@
             v-model="date"
             placeholder="Select Week"
             week-picker
+            :enable-time-picker="false"
             :month-change-on-scroll="false"
             :week-numbers="{ type: 'iso' }"
             class="p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -72,7 +74,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch,} from 'vue';
 import ApexChart from 'vue3-apexcharts';
 import dayjs from 'dayjs';
 import jsonData from './jsonpogen/junioAV.json';
@@ -103,7 +105,7 @@ const formatDate = (date) => {
 // Opciones del gráfico de linea
 const chartOptions = ref({
   chart: {
-    id: 'entradas-por-fecha',
+    id: 'linechart',
     zoom: {
       enabled: true, // Permitir zoom
       type: 'x',
@@ -134,19 +136,21 @@ const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
 const selectedPlazaIdId = ref('all');
 const date = ref(null);
 
+
 const processData = () => {
   const allDates = new Set();
 
   // Si se selecciona "todas las plazas"
   if (selectedPlazaIdId.value === "all") {
     //Recopilar todas las fechas en las que hay entradas para cualquier plaza
+
     availablePlazas.forEach(plazaId => {
       jsonData.datos
         .filter(item => item.plaza_id == plazaId)
         .forEach(item => {
           //console.log(item.fecha);
           const monthString = formatDate(item.fecha);
-          allDates.add(monthString); // Agregar todas las fechas de todas las plazas
+          allDates.add(monthString);// Agregar todas las fechas de todas las plazas
         });
     });
 
@@ -175,7 +179,8 @@ const processData = () => {
     });
 
     chartSeries.value = seriesData;
-    chartOptions.value.xaxis.categories = sortedDates; // Usar la lista ordenada de fechas
+
+    chartOptions.value.xaxis.categories = sortedDates;// Usar la lista ordenada de fechas
 
 
   } else {
@@ -197,6 +202,7 @@ const processData = () => {
       name: `Plaza ${selectedPlazaIdId.value}`,
       data: dataForSeries
     }];
+
     chartOptions.value.xaxis.categories = allDates;
 
   }
@@ -212,7 +218,6 @@ const filterDataByDate = () => {
 
   const [startDate, endDate] = date.value;
   let allDates = new Set();
-  console.log(date.value)
 
   if (selectedPlazaIdId.value === "all") {
 
@@ -222,8 +227,6 @@ const filterDataByDate = () => {
         const itemDate = dayjs(item.fecha);
         return itemDate.isBetween(startDate,endDate, null, '[]') && item.plaza_id == plazaId;
         });
-
-        console.log(filteredData)
 
       filteredData.forEach(item => {
       const monthString = formatDate(item.fecha);
@@ -251,18 +254,11 @@ const filterDataByDate = () => {
     }
     );
 
-    chartSeries.value = [];
-    chartOptions.value.xaxis.categories = [];
 
     chartSeries.value = seriesData;
-    //chartOptions.value.xaxis.categories = allDates;
-    chartOptions.value.xaxis.categories = Array.from(allDates).sort();
-    try {
-      console.log("Categories en xaxis:", chartOptions.value);
-    } catch (error) {
-      console.log("algo salio mal o:")
-    }
 
+
+    chartOptions.value.xaxis.categories = Array.from(allDates).sort();
 
 
   }
@@ -305,7 +301,6 @@ processData();
 // Monitorea cambios en selectedPlazaIdId
 watch([selectedPlazaIdId,selectedView], () => {
   filterDataByDate(); // Llama a la función para filtrar según la plaza seleccionada
-  chartOptions.value.xaxis.categories
 });
 
 //GRAFICA DE PIE

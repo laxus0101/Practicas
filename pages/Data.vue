@@ -6,6 +6,6 @@
 
 <script setup>
   import Apexchart2 from '~/components/apexchart2.vue';
-  import apexchartsjson from '~/components/apexchartsjson.vue';
+  import apexchartsjson from '~/components/chartjs.vue';
 </script>
 

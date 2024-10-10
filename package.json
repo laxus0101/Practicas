@@ -21,6 +21,7 @@
     "@vuelidate/validators": "^2.0.4",
     "@vuepic/vue-datepicker": "^9.0.3",
     "apexcharts": "^3.53.0",
+    "chart.js": "^4.4.4",
     "cookie-universal-nuxt": "^2.2.2",
     "datatables.net": "^1.13.11",
     "datatables.net-buttons": "^3.1.2",
