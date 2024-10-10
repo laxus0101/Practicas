@@ -85,8 +85,10 @@ dayjs.extend(isBetween);
 
 const selectedView = ref('months');
 
+
 //para seleccionar el formato seun se pida
 const formatDate = (date) => {
+
     if (selectedView.value === 'days') {
       Console.console.log('prueba 1');
       return dayjs(date).format('YYYY-MM-DD');
@@ -94,6 +96,7 @@ const formatDate = (date) => {
       return dayjs(date).format('YYYY-WW'); // Agrupar por semana
     } else if (selectedView.value === 'months') {
     return dayjs(date).format('YYYY-MM'); // Formato para meses
+
     }
 };
 
@@ -110,8 +113,8 @@ const chartOptions = ref({
   xaxis: {
     categories: [], // Se llenarán con los meses
     labels: {
-      formatter: (value) => formatDate(value)
-    }
+      //formatter: (value) => formatDate(value)
+      }
   },
   stroke: {
     curve: 'smooth'
@@ -141,7 +144,7 @@ const processData = () => {
       jsonData.datos
         .filter(item => item.plaza_id == plazaId)
         .forEach(item => {
-
+          //console.log(item.fecha);
           const monthString = formatDate(item.fecha);
           allDates.add(monthString); // Agregar todas las fechas de todas las plazas
         });
@@ -196,7 +199,6 @@ const processData = () => {
     }];
     chartOptions.value.xaxis.categories = allDates;
 
-
   }
 };
 
@@ -210,14 +212,18 @@ const filterDataByDate = () => {
 
   const [startDate, endDate] = date.value;
   let allDates = new Set();
+  console.log(date.value)
 
   if (selectedPlazaIdId.value === "all") {
+
 
     const seriesData = availablePlazas.map(plazaId => {
       const filteredData = jsonData.datos.filter(item => {
         const itemDate = dayjs(item.fecha);
         return itemDate.isBetween(startDate,endDate, null, '[]') && item.plaza_id == plazaId;
         });
+
+        console.log(filteredData)
 
       filteredData.forEach(item => {
       const monthString = formatDate(item.fecha);
@@ -236,7 +242,7 @@ const filterDataByDate = () => {
         // Asegurarse de que todas las fechas tengan datos, y rellenar con 0 si faltan
       const dataForSeries = sortedDates.map(date => groupedData[date] || 0);
 
-      console.log(dataForSeries);
+      //console.log(dataForSeries);
 
       return {
         name: `Plaza ${plazaId}`,
@@ -252,13 +258,10 @@ const filterDataByDate = () => {
     //chartOptions.value.xaxis.categories = allDates;
     chartOptions.value.xaxis.categories = Array.from(allDates).sort();
     try {
-      console.log("Categories en xaxis:", chartOptions.value.xaxis.categories);
+      console.log("Categories en xaxis:", chartOptions.value);
     } catch (error) {
       console.log("algo salio mal o:")
     }
-
-    console.log("Series data length:", seriesData[0]?.data.length);
-    console.log("Categories length:", chartOptions.value.xaxis.categories.length);
 
 
 
