@@ -180,7 +180,12 @@ const processData = () => {
 
     chartSeries.value = seriesData;
 
-    chartOptions.value.xaxis.categories = sortedDates;// Usar la lista ordenada de fechas
+    //chartOptions.value.xaxis.categories = sortedDates;// Usar la lista ordenada de fechas
+    chartOptions.value = {...chartOptions.value, ...{
+      xaxis: {
+        categories : Array.from(allDates).sort()
+      }
+    }}
 
 
   } else {
@@ -203,7 +208,12 @@ const processData = () => {
       data: dataForSeries
     }];
 
-    chartOptions.value.xaxis.categories = allDates;
+    //chartOptions.value.xaxis.categories = allDates;
+    chartOptions.value = {...chartOptions.value, ...{
+      xaxis: {
+        categories : Array.from(allDates).sort()
+      }
+    }}
 
   }
 };
@@ -257,9 +267,12 @@ const filterDataByDate = () => {
 
     chartSeries.value = seriesData;
 
-
-    chartOptions.value.xaxis.categories = Array.from(allDates).sort();
-
+    //chartOptions.value.xaxis.categories = Array.from(allDates).sort();
+    chartOptions.value = {...chartOptions.value, ...{
+      xaxis: {
+        categories : Array.from(allDates).sort()
+      }
+    }}
 
   }
   else {
@@ -291,7 +304,12 @@ const filterDataByDate = () => {
       data: dataForSeries
     }];
 
-    chartOptions.value.xaxis.categories = sortedDates;
+    //chartOptions.value.xaxis.categories = sortedDates;
+    chartOptions.value = {...chartOptions.value, ...{
+      xaxis: {
+        categories : Array.from(allDates).sort()
+      }
+    }}
 
   }
 };

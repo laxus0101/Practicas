@@ -43,17 +43,15 @@
             @update:model-value="filterDataByDate"
           />
         </div>
-
-
     </div>
 
+
     <div class="flex justify-center mt-6">
-      <ClientOnly>
-
-      </ClientOnly>
-
-      <canvas id="myChart"></canvas>
-
+      <div>
+        <ClientOnly>
+          <canvas ref="lineChart"></canvas>
+        </ClientOnly>
+      </div>
     </div>
 
 
@@ -61,13 +59,62 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch,onMounted } from 'vue';
 import dayjs from 'dayjs';
 import jsonData from './jsonpogen/junioAV.json';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import isBetween from 'dayjs/plugin/isBetween';
+import { Chart } from 'chart.js';
 
 
+// Referencia al elemento canvas
+const lineChart = ref(null);
 
+const renderChart = () => {
+  const ctx = lineChart.value.getContext('2d');
+
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
+      datasets: [
+        {
+          label: 'Data 1',
+          backgroundColor: 'rgba(75, 192, 192, 0.2)',
+          borderColor: 'rgba(75, 192, 192, 1)',
+          data: [65, 59, 80, 81, 56, 55, 40],
+        },
+        {
+          label: 'Data 2',
+          backgroundColor: 'rgba(153, 102, 255, 0.2)',
+          borderColor: 'rgba(153, 102, 255, 1)',
+          data: [28, 48, 40, 19, 86, 27, 90],
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      scales: {
+        x: {
+          beginAtZero: true,
+        },
+        y: {
+          beginAtZero: true,
+        },
+      },
+    },
+  });
+};
+
+// Renderiza la gráfica cuando el componente está montado
+onMounted(() => {
+  renderChart();
+});
 </script>
+
+<style scoped>
+canvas {
+  max-width: 100%;
+}
+</style>
