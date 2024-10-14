@@ -65,7 +65,7 @@ import jsonData from './jsonpogen/junioAV.json';
 import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import isBetween from 'dayjs/plugin/isBetween';
-import { Chart } from 'chart.js';
+
 
 
 // Referencia al elemento canvas

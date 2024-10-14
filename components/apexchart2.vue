@@ -55,12 +55,31 @@
           width="600"
           type="line"
           :options="chartOptions"
-          :series="chartSeries"
+          :series="paginatedSeries"
         />
       </ClientOnly>
     </div>
 
-    <div class="flex justify-center mt-6">
+    <div class="flex justify-center items-center space-x-4 my-6 ">
+      <button
+        @click="prevPage"
+        :disabled="currentPage === 1"
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors">
+        Anterior
+      </button>
+
+      <span class="text-gray-700 font-semibold">Página {{ currentPage }} de {{ totalPages }}</span>
+
+      <button
+        @click="nextPage"
+        :disabled="currentPage >= totalPages"
+        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors">
+        Siguiente
+      </button>
+    </div>
+
+
+    <div class="flex justify-center pt-8">
       <ClientOnly>
         <ApexChart
           type="pie"
@@ -116,7 +135,8 @@ const chartOptions = ref({
     categories: [], // Se llenarán con los meses
     labels: {
       //formatter: (value) => formatDate(value)
-      }
+      },
+    paging:true,
   },
   stroke: {
     curve: 'smooth'
@@ -135,6 +155,58 @@ const chartSeries = ref([{
 const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
 const selectedPlazaIdId = ref('all');
 const date = ref(null);
+const itemsPerPage = ref(10);
+const currentPage = ref(1);
+const totalPages =ref(1);
+
+
+// Calcular el total de páginas basado en los datos y elementos por página
+const calculateTotalPages = () => {
+  totalPages.value = Math.ceil(chartOptions.value.xaxis.categories.length / itemsPerPage.value);
+};
+
+//paginacion de los datos en el grafico de linea
+const paginatedSeries = computed(() => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+
+  return chartSeries.value.map(series => ({
+    ...series,
+    data: series.data.slice(start, end),
+  }));
+});
+
+
+// Actualiza el gráfico con los datos paginados
+const updateChart = () => {
+  const start = (currentPage.value - 1) * itemsPerPage.value;
+  const end = start + itemsPerPage.value;
+
+  chartOptions.value = {
+    ...chartOptions.value,
+    xaxis: {
+      categories: chartOptions.value.xaxis.categories.slice(start, end),
+    }
+  };
+
+  calculateTotalPages(); // Calcular el total de páginas
+};
+
+// Navegar a la siguiente página
+const nextPage = () => {
+  if (currentPage.value < totalPages.value) {
+    currentPage.value++;
+    updateChart();
+  }
+};
+
+// Navegar a la página anterior
+const prevPage = () => {
+  if (currentPage.value > 1) {
+    currentPage.value--;
+    updateChart();
+  }
+};
 
 
 const processData = () => {
@@ -186,6 +258,7 @@ const processData = () => {
         categories : Array.from(allDates).sort()
       }
     }}
+    updateChart();
 
 
   } else {
@@ -216,6 +289,7 @@ const processData = () => {
     }}
 
   }
+  updateChart();
 };
 
 // Función para filtrar los datos por rango de fechas
@@ -273,6 +347,7 @@ const filterDataByDate = () => {
         categories : Array.from(allDates).sort()
       }
     }}
+    updateChart();
 
   }
   else {
@@ -312,6 +387,7 @@ const filterDataByDate = () => {
     }}
 
   }
+  updateChart();
 };
 // Cargar los datos JSON al montar el componente
 processData();
