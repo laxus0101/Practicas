@@ -6,5 +6,6 @@
 
 <script setup>
   import Apexchart2 from '~/components/apexchart2.vue';
+  import Piechart from '~/components/Piechart.vue';
 </script>
 

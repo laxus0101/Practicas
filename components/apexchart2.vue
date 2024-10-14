@@ -1,11 +1,17 @@
 <template>
   <div>
-    <div class="my-3 grid grid-cols-4 grid-rows-1 gap-2 ">
+    <div class="my-3 grid grid-cols-4 grid-rows-1 gap-2 ml-2 ">
 
         <div class="col-start-1 space-x-2 ">
-          <button @click="selectedView.value = 'days'" class="btn border-4">Días</button>
-          <button @click="selectedView.value = 'weeks'" class="btn border-4">Semanas</button>
-          <button @click="selectedView.value = 'months'" class="btn border-4">Meses</button>
+          <button @click="selectedView.value = 'days'"
+                  class="px-2 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors"
+          >Días</button>
+          <button @click="selectedView.value = 'weeks'"
+                  class="px-2 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors"
+          >Semanas</button>
+          <button @click="selectedView.value = 'months'"
+                  class="px-2 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors"
+          >Meses</button>
         </div>
 
         <div class="col-start-2 centers" >
@@ -55,27 +61,9 @@
           width="600"
           type="line"
           :options="chartOptions"
-          :series="paginatedSeries"
+          :series="chartSeries"
         />
       </ClientOnly>
-    </div>
-
-    <div class="flex justify-center items-center space-x-4 my-6 ">
-      <button
-        @click="prevPage"
-        :disabled="currentPage === 1"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors">
-        Anterior
-      </button>
-
-      <span class="text-gray-700 font-semibold">Página {{ currentPage }} de {{ totalPages }}</span>
-
-      <button
-        @click="nextPage"
-        :disabled="currentPage >= totalPages"
-        class="px-4 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors">
-        Siguiente
-      </button>
     </div>
 
 
@@ -88,6 +76,7 @@
         />
       </ClientOnly>
     </div>
+
 
   </div>
 </template>
@@ -154,59 +143,8 @@ const chartSeries = ref([{
 
 const availablePlazas = [...new Set(jsonData.datos.map(item => item.plaza_id))];
 const selectedPlazaIdId = ref('all');
-const date = ref(null);
-const itemsPerPage = ref(10);
-const currentPage = ref(1);
-const totalPages =ref(1);
 
-
-// Calcular el total de páginas basado en los datos y elementos por página
-const calculateTotalPages = () => {
-  totalPages.value = Math.ceil(chartOptions.value.xaxis.categories.length / itemsPerPage.value);
-};
-
-//paginacion de los datos en el grafico de linea
-const paginatedSeries = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-
-  return chartSeries.value.map(series => ({
-    ...series,
-    data: series.data.slice(start, end),
-  }));
-});
-
-
-// Actualiza el gráfico con los datos paginados
-const updateChart = () => {
-  const start = (currentPage.value - 1) * itemsPerPage.value;
-  const end = start + itemsPerPage.value;
-
-  chartOptions.value = {
-    ...chartOptions.value,
-    xaxis: {
-      categories: chartOptions.value.xaxis.categories.slice(start, end),
-    }
-  };
-
-  calculateTotalPages(); // Calcular el total de páginas
-};
-
-// Navegar a la siguiente página
-const nextPage = () => {
-  if (currentPage.value < totalPages.value) {
-    currentPage.value++;
-    updateChart();
-  }
-};
-
-// Navegar a la página anterior
-const prevPage = () => {
-  if (currentPage.value > 1) {
-    currentPage.value--;
-    updateChart();
-  }
-};
+const date = ref([]);
 
 
 const processData = () => {
@@ -234,7 +172,6 @@ const processData = () => {
         if (item.plaza_id == plazaId) {
 
           const monthString = formatDate(item.fecha);
-
           const entradas = parseInt(item.entradas, 10);
           acc[monthString] = (acc[monthString] || 0) + entradas;
         }
@@ -255,11 +192,11 @@ const processData = () => {
     //chartOptions.value.xaxis.categories = sortedDates;// Usar la lista ordenada de fechas
     chartOptions.value = {...chartOptions.value, ...{
       xaxis: {
-        categories : Array.from(allDates).sort()
+        categories : Array.from(allDates.slice(0, 10)).sort()
       }
     }}
-    updateChart();
 
+    ////////////////////////////////////////////////////////////////////////////
 
   } else {
     // Caso para una plaza específica
@@ -284,12 +221,12 @@ const processData = () => {
     //chartOptions.value.xaxis.categories = allDates;
     chartOptions.value = {...chartOptions.value, ...{
       xaxis: {
-        categories : Array.from(allDates).sort()
+        categories : Array.from(allDates.slice(0, 10)).sort()
       }
     }}
 
   }
-  updateChart();
+  //updateChart();
 };
 
 // Función para filtrar los datos por rango de fechas
@@ -347,7 +284,7 @@ const filterDataByDate = () => {
         categories : Array.from(allDates).sort()
       }
     }}
-    updateChart();
+    //updateChart();
 
   }
   else {
@@ -387,15 +324,17 @@ const filterDataByDate = () => {
     }}
 
   }
-  updateChart();
+  //updateChart();
 };
 // Cargar los datos JSON al montar el componente
 processData();
+
 
 // Monitorea cambios en selectedPlazaIdId
 watch([selectedPlazaIdId,selectedView], () => {
   filterDataByDate(); // Llama a la función para filtrar según la plaza seleccionada
 });
+
 
 //GRAFICA DE PIE
 
@@ -454,5 +393,4 @@ const piechartOptions = ref({
   },
   labels: piechartLabels.value
 });
-
 </script>

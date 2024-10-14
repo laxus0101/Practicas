@@ -3,11 +3,11 @@ import { defineStore } from "pinia";
 export const usedatepciker = defineStore({
     id: 'daterange',
     state: () => ({
-    date: "",
+    dateformat: "",
     }),
     actions: {
-    datesaved(date){
-        this.date = date
+    datesaved(dateformat){
+        this.dateformat = dateformat
     }
     },
     persist: {
@@ -15,4 +15,3 @@ export const usedatepciker = defineStore({
     }
 })
 
-//buscar como usar pinia correctamente, agregar una grafica de pie y agregar opcion para filtrar por mes
