@@ -95,9 +95,9 @@ const formatDate = (date) => {
       Console.console.log('prueba 1');
       return dayjs(date).format('YYYY-MM-DD');
     } else if (selectedView.value === 'weeks') {
-      return dayjs(date).format('YYYY-WW'); // Agrupar por semana
+      return dayjs(date).format('YYYY-WW');
     } else if (selectedView.value === 'months') {
-    return dayjs(date).format('YYYY-MM'); // Formato para meses
+    return dayjs(date).format('YYYY-MM');
 
     }
 };
