@@ -1,17 +1,20 @@
-import { defineStore } from "pinia";
+import { defineStore } from 'pinia';
 
-export const usedatepciker = defineStore({
-    id: 'daterange',
+export const useDateFormatStore = defineStore({
+    id: 'dateFormatStore',
     state: () => ({
-    dateformat: "",
+    Rangofechas:[]
     }),
     actions: {
-    datesaved(dateformat){
-        this.dateformat = dateformat
-    }
+    setDateFormat(StartDate,EndDate) {
+        //this.Rangofechas = [StartDate,EndDate]
+        this.Rangofechas=[StartDate,EndDate]
+    },
+    clearDateFormat() {
+        this.Rangofechas = []
+        }
     },
     persist: {
-    storage: persistedState.localStorage,
+    storage: persistedState.localStorage, // Guarda en localStorage
     }
-})
-
+});
