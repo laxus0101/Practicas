@@ -9,9 +9,9 @@
           <button @click="selectedView = 'months'"
                   class="px-2 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors"
           >Meses</button>
-          <button @click="borrardatos()"
+          <button @click="selectedView = 'weeks'"
                   class="px-2 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors"
-          >borrar ultima busqueda</button>
+          >Semanas</button>
         </div>
 
         <div class="col-start-2 centers" >
@@ -55,6 +55,12 @@
 
     </div>
 
+    <center>
+      <button @click="borrardatos()"
+                  class="px-2 py-2 bg-blue-500 text-white rounded-lg disabled:opacity-50 hover:bg-blue-600 disabled:hover:bg-blue-500 transition-colors"
+          >borrar pinia</button>
+    </center>
+
     <div class="flex justify-center mt-6">
       <ClientOnly>
         <ApexChart
@@ -90,6 +96,8 @@ import VueDatePicker from '@vuepic/vue-datepicker';
 import '@vuepic/vue-datepicker/dist/main.css';
 import isBetween from 'dayjs/plugin/isBetween';
 import { useDateFormatStore } from '~/stores/datestore';
+import weekOfYear from 'dayjs/plugin/weekOfYear';
+import advancedFormat from 'dayjs/plugin/advancedFormat';
 
 
 const dateFormatStore = useDateFormatStore();
@@ -97,6 +105,8 @@ const dateFormatStore = useDateFormatStore();
 
 // Activar el plugin isBetween
 dayjs.extend(isBetween);
+dayjs.extend(weekOfYear);
+dayjs.extend(advancedFormat);
 
 const selectedView = ref('months');
 
@@ -106,14 +116,14 @@ const formatDate = (date) => {
 
     if (selectedView.value === 'days') {
       return dayjs(date).format('YYYY-MM-DD');
-    } else if (selectedView.value === 'weekss') {
-      return dayjs(date).format('YYYY-WW');
+    } else if (selectedView.value === 'weeks') {
+      //return dayjs(date).format('YYYY-WW');
+      return dayjs(date).format('YYYY-WO');
     } else if (selectedView.value === 'months') {
     return dayjs(date).format('YYYY-MM');
 
     }
 };
-
 
 
 // Opciones del gráfico de linea
@@ -159,8 +169,22 @@ const borrardatos = () => {
   processData()
 }
 
+
 const dateStartpinia = dateFormatStore.Rangofechas[0]
 const dateEndpinia = dateFormatStore.Rangofechas[1]
+
+
+const generateWeeksInRange = (start, end) => {
+  const weeks = [];
+  let current = dayjs(start).startOf('week');
+  const last = dayjs(end).endOf('week');
+
+  while (current.isBefore(last)) {
+    weeks.push(current.format('YYYY-[W]WW'));
+    current = current.add(1, 'week');
+  }
+  return weeks;
+};
 
 
 const processData = () => {
@@ -170,6 +194,18 @@ const processData = () => {
   if (selectedPlazaIdId.value === "all") {
 
     if(dateStartpinia || dateEndpinia){
+
+      /* let dateRange;
+
+      if (selectedView.value === 'weeks') {
+        // Generar semanas para el rango
+        dateRange = generateWeeksInRange(dateStartpinia, dateEndpinia);
+      } else {
+        // Generar días o meses según la vista seleccionada
+        dateRange = jsonData.datos
+          .filter(item => dayjs(item.fecha).isBetween(dateStartpinia, dateEndpinia, null, '[]'))
+          .map(item => formatDate(item.fecha));
+      } */
 
       const seriesData = availablePlazas.map(plazaId => {
         const filteredData = jsonData.datos.filter(item => {
@@ -206,7 +242,7 @@ const processData = () => {
 
       chartOptions.value = {...chartOptions.value, ...{
         xaxis: {
-          categories : Array.from(allDates).sort()
+          categories :Array.from(allDates).sort()
         }
       }
       }
@@ -220,6 +256,7 @@ const processData = () => {
           allDates.add(monthString);// Agregar todas las fechas de todas las plazas
           });
       });
+
 
       const sortedDates = Array.from(allDates).sort()
       const limitedDates = sortedDates.slice(0, 20);
@@ -289,6 +326,8 @@ const processData = () => {
   }
 
 };
+
+//watch(() => dateFormatStore.Rangofechas, processData, { immediate: true });
 
 
 // Función para filtrar los datos por rango de fechas
